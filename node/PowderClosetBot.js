@@ -14,7 +14,8 @@ class PowderClosetBot {
      * @param {string} conversationWorkspaceId - The Watson Conversation workspace ID
      * @param {string} foursquareClientSecret - The Foursquare Client Secret
      */
-    constructor(userStore, dialogStore, conversationUsername, conversationPassword, conversationWorkspaceId) {
+    constructor(userStore, dialogStore, conversationUsername, conversationPassword, conversationWorkspaceId, recommendationUrl) {
+        this.recommendationUrl = recommendationUrl;
         this.userStore = userStore;
         this.dialogStore = dialogStore;
         this.conversationService = new ConversationV1({
@@ -152,6 +153,8 @@ class PowderClosetBot {
      */
     handleGenerateRecommendation(conversationResponse) {
 
+        var recommendationUrl = this.recommendationUrl;
+
         var activity = conversationResponse.context.activity;
         var location = conversationResponse.context.location;
         var date = conversationResponse.context.date;
@@ -178,25 +181,35 @@ class PowderClosetBot {
               request(weatherUrl, function (error, response, body) {
 
                 var wc = JSON.parse(body).forecasts[day].day.wc;
-                var temperature = Math.round(parseInt(wc) - Math.random()*40);
 
-                var iconCode = JSON.parse(body).forecasts[day].day.icon_code;
+                var temp = JSON.parse(body).forecasts[day].day.temp;
+                temp = Math.round(parseInt(temp) - Math.random()*40);
+
+                var iconcode = JSON.parse(body).forecasts[day].day.icon_code;
 
                 var pop = Math.round(Math.random()*10)*10;
 
-                console.log(`day: ${day} temperature: ${temperature} precipitation: ${pop} icon code: ${iconCode}`);
+                console.log(`day: ${day} temperature: ${temp} precipitation: ${pop} icon code: ${iconcode}`);
 
-                var reply = '';
+                var requestUrl = {uri:recommendationUrl, qs:{temp: temp, windchill:wc, sun:iconcode, precip:pop}}
 
-                if (error) {
-                  console.log(error);
-                  reply = 'Sorry, I couldn\'t find any recommendation.';
-                }
-                else {
-                  reply = 'Here is what I found:\n' + 'temperature:'+temperature+'\n'+'chance of precipitation:'+pop;
-                }
+                console.log('recommendation url:' + requestUrl.uri);
 
-                resolve(reply);
+                request(requestUrl, function (error, response, body) {
+
+                  var reply = '';
+
+                  if (error) {
+                    console.log(error);
+                    reply = 'Sorry, I couldn\'t find any recommendation.';
+                  }
+                  else {
+                    reply = body;
+                  }
+
+                  resolve(reply);
+
+                });
 
               });
 

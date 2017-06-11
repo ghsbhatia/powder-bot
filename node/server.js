@@ -36,7 +36,8 @@ http.listen(appEnv.port, appEnv.bind, () => {
         new CloudantDialogStore(process.env.CLOUDANT_URL, process.env.CLOUDANT_DIALOG_DB_NAME),
         process.env.CONVERSATION_USERNAME,
         process.env.CONVERSATION_PASSWORD,
-        process.env.CONVERSATION_WORKSPACE_ID
+        process.env.CONVERSATION_WORKSPACE_ID,
+        process.env.RECOMMENDATION_URL
     );
     // initialize the HealthBot
     powderClosetBot.init()
